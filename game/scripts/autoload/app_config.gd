@@ -3,7 +3,7 @@ extends Node
 const CONFIG_PATH := "user://config.json"
 const DEFAULT_PATH := "res://config/default_config.json"
 
-var chart_dir: String = "../format/examples"
+var chart_dir: String = "../chart"
 var scroll_speed: float = 1.0
 var judge_iya_ms: int = 45
 var judge_hihi_ms: int = 90
