@@ -7,6 +7,9 @@ game/build/
 game/export/
 game/dist/
 dist/
+*.exe
+*.pck
+*.dll
 *.translation
 
 # Local Godot engine binary / archive (scripts in tools/ stay tracked)
