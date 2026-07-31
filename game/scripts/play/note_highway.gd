@@ -122,7 +122,9 @@ func update_visuals(now_ms: float) -> void:
 
 func resolve_note(note_index: int, lane: int, grade: Judge.Grade, is_long_release: bool = false) -> void:
 	var good := grade != Judge.Grade.MISS
-	play_judge_effect(lane, grade)
+	# Only successful hits get judge-line VFX (not auto-miss when notes pass).
+	if good:
+		play_judge_effect(lane, grade)
 
 	if not _note_nodes.has(note_index):
 		return
@@ -155,70 +157,108 @@ func hide_note(note_index: int) -> void:
 			node.visible = false
 
 
-func play_judge_effect(lane: int, grade: Judge.Grade) -> void:
+func play_press_effect(lane: int) -> void:
 	if lane < 0 or lane > 2:
 		return
-	var color := _effect_color(grade, lane)
-	var energy := 2.2
-	var lifetime := 0.28
-	var scale0 := 1.0
-	match grade:
-		Judge.Grade.IYA:
-			energy = 4.0
-			lifetime = 0.38
-			scale0 = 1.35
-		Judge.Grade.HIHI:
-			energy = 3.0
-			lifetime = 0.32
-			scale0 = 1.15
-		Judge.Grade.ENG:
-			energy = 2.2
-			lifetime = 0.26
-			scale0 = 1.0
-		Judge.Grade.MISS:
-			energy = 1.2
-			lifetime = 0.2
-			scale0 = 0.85
-			color = Color(0.55, 0.55, 0.6)
-
-	# Horizontal flash on judge line
+	var color := _lane_colors[lane]
+	# Soft pad flash under finger — weaker than judge hit FX.
 	var flash := MeshInstance3D.new()
 	flash.set_meta("hit_fx", true)
 	var box := BoxMesh.new()
-	box.size = Vector3(NOTE_WIDTH * 1.15, 0.12, 0.35)
+	box.size = Vector3(NOTE_WIDTH * 0.95, 0.06, 0.22)
 	flash.mesh = box
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = Color(color.r, color.g, color.b, 0.95)
+	mat.albedo_color = Color(color.r, color.g, color.b, 0.55)
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = 1.4
+	flash.material_override = mat
+	flash.position = Vector3(LANE_X[lane], 0.14, JUDGE_Z)
+	add_child(flash)
+	_effects.append({"node": flash, "age": 0.0, "lifetime": 0.14, "base_scale": 1.0, "kind": "press"})
+	flash_lane(lane, 1.6)
+
+
+func play_judge_effect(lane: int, grade: Judge.Grade) -> void:
+	if lane < 0 or lane > 2:
+		return
+	if grade == Judge.Grade.MISS:
+		return
+	var color := _effect_color(grade, lane)
+	var energy := 3.2
+	var lifetime := 0.34
+	var scale0 := 1.2
+	match grade:
+		Judge.Grade.IYA:
+			energy = 6.5
+			lifetime = 0.48
+			scale0 = 1.7
+		Judge.Grade.HIHI:
+			energy = 4.8
+			lifetime = 0.4
+			scale0 = 1.45
+		Judge.Grade.ENG:
+			energy = 3.4
+			lifetime = 0.32
+			scale0 = 1.2
+
+	# Strong horizontal burst on judge line
+	var flash := MeshInstance3D.new()
+	flash.set_meta("hit_fx", true)
+	var box := BoxMesh.new()
+	box.size = Vector3(NOTE_WIDTH * 1.35, 0.2, 0.5)
+	flash.mesh = box
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(color.r, color.g, color.b, 1.0)
 	mat.emission_enabled = true
 	mat.emission = color
 	mat.emission_energy_multiplier = energy
 	flash.material_override = mat
-	flash.position = Vector3(LANE_X[lane], 0.25, JUDGE_Z)
+	flash.position = Vector3(LANE_X[lane], 0.32, JUDGE_Z)
 	add_child(flash)
 	_effects.append({"node": flash, "age": 0.0, "lifetime": lifetime, "base_scale": scale0, "kind": "flash"})
 
-	# Expanding ring (flat box growing on X/Z)
+	# Expanding ring
 	var ring := MeshInstance3D.new()
 	ring.set_meta("hit_fx", true)
 	var ring_mesh := BoxMesh.new()
-	ring_mesh.size = Vector3(0.4, 0.04, 0.4)
+	ring_mesh.size = Vector3(0.45, 0.05, 0.45)
 	ring.mesh = ring_mesh
 	var rmat := StandardMaterial3D.new()
 	rmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	rmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	rmat.albedo_color = Color(color.r, color.g, color.b, 0.75)
+	rmat.albedo_color = Color(color.r, color.g, color.b, 0.9)
 	rmat.emission_enabled = true
 	rmat.emission = color
-	rmat.emission_energy_multiplier = energy * 0.8
+	rmat.emission_energy_multiplier = energy
 	ring.material_override = rmat
-	ring.position = Vector3(LANE_X[lane], 0.2, JUDGE_Z)
+	ring.position = Vector3(LANE_X[lane], 0.22, JUDGE_Z)
 	add_child(ring)
-	_effects.append({"node": ring, "age": 0.0, "lifetime": lifetime * 1.15, "base_scale": scale0, "kind": "ring"})
+	_effects.append({"node": ring, "age": 0.0, "lifetime": lifetime * 1.2, "base_scale": scale0, "kind": "ring"})
 
-	# Pulse lane strip briefly
-	flash_lane(lane, energy * 0.5)
+	# Vertical spark column for clearer hit feedback
+	var spark := MeshInstance3D.new()
+	spark.set_meta("hit_fx", true)
+	var spark_mesh := BoxMesh.new()
+	spark_mesh.size = Vector3(0.18, 1.4, 0.18)
+	spark.mesh = spark_mesh
+	var smat := StandardMaterial3D.new()
+	smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	smat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	smat.albedo_color = Color(color.r, color.g, color.b, 0.85)
+	smat.emission_enabled = true
+	smat.emission = Color(1.0, 1.0, 1.0).lerp(color, 0.4)
+	smat.emission_energy_multiplier = energy * 1.1
+	spark.material_override = smat
+	spark.position = Vector3(LANE_X[lane], 0.9, JUDGE_Z)
+	add_child(spark)
+	_effects.append({"node": spark, "age": 0.0, "lifetime": lifetime * 0.85, "base_scale": scale0, "kind": "spark"})
+
+	flash_lane(lane, energy * 0.55)
 
 
 func flash_lane(lane: int, boost: float = 2.5) -> void:
@@ -245,12 +285,20 @@ func _update_effects() -> void:
 		var t: float = clampf(float(fx["age"]) / life, 0.0, 1.0)
 		var fade := 1.0 - t
 		var base: float = float(fx["base_scale"])
-		if str(fx["kind"]) == "ring":
-			var s := base * (0.6 + t * 2.4)
-			node.scale = Vector3(s, 1.0, s * 0.55)
-		else:
-			var s2 := base * (1.0 + t * 0.35)
-			node.scale = Vector3(s2, 1.0 + t * 0.8, 1.0)
+		match str(fx["kind"]):
+			"ring":
+				var s := base * (0.7 + t * 3.0)
+				node.scale = Vector3(s, 1.0, s * 0.55)
+			"spark":
+				var sy := base * (1.0 + t * 1.8)
+				node.scale = Vector3(1.0 - t * 0.5, sy, 1.0 - t * 0.5)
+				node.position.y = 0.9 + t * 0.8
+			"press":
+				var s3 := base * (1.0 + t * 0.25)
+				node.scale = Vector3(s3, 1.0, 1.0)
+			_:
+				var s2 := base * (1.0 + t * 0.55)
+				node.scale = Vector3(s2, 1.0 + t * 1.2, 1.0)
 		var mat := node.material_override as StandardMaterial3D
 		if mat:
 			var c := mat.albedo_color

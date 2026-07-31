@@ -26,10 +26,18 @@ var _started: bool = false
 var _finished: bool = false
 var _audio_length_ms: float = 0.0
 var _judge_fade_t: float = 0.0
+var _tat_player: AudioStreamPlayer
 
 
 func _ready() -> void:
 	pause_overlay.visible = false
+	_tat_player = AudioStreamPlayer.new()
+	_tat_player.name = "TatSfxPlayer"
+	_tat_player.stream = HitSfx.make_tat_stream()
+	_tat_player.volume_db = -10.0
+	_tat_player.max_polyphony = 8
+	_tat_player.bus = "Master"
+	add_child(_tat_player)
 	# Look down the highway (+Z): notes approach from far (SPAWN_Z) to judge (0).
 	var cam := $Camera3D as Camera3D
 	if cam:
@@ -125,7 +133,9 @@ func _now_ms() -> float:
 
 
 func _on_lane_pressed(lane: int) -> void:
-	highway.flash_lane(lane)
+	# Always give press feedback — soft "탓" layered on the music.
+	highway.play_press_effect(lane)
+	_play_tat()
 	var now := _now_ms()
 	var idx := _find_nearest_pending_hit(lane, now)
 	if idx >= 0:
@@ -148,6 +158,13 @@ func _on_lane_pressed(lane: int) -> void:
 	var arm_idx := _find_armable_release(lane, now)
 	if arm_idx >= 0:
 		_active_long_release[lane] = arm_idx
+
+
+func _play_tat() -> void:
+	if _tat_player == null or _tat_player.stream == null:
+		return
+	_tat_player.pitch_scale = randf_range(0.96, 1.06)
+	_tat_player.play()
 
 
 func _on_lane_released(lane: int) -> void:
