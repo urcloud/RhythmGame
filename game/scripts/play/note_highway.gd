@@ -6,15 +6,17 @@ extends Node3D
 const LANE_X: Array[float] = [2.4, 0.0, -2.4]
 const LANE_WIDTH := 1.7
 const NOTE_WIDTH := 1.55
-const SINGLE_DEPTH := 0.5
+const LONG_BODY_WIDTH := 0.85
+const SINGLE_DEPTH := 0.42
+const HEAD_DEPTH := 0.55
+const TAIL_DEPTH := 0.38
 const JUDGE_Z := 0.0
 const SPAWN_Z := 28.0
 const BASE_APPROACH_MS := 2000.0
 const HIGHWAY_WIDTH := 7.6
 
 var scroll_speed: float = 1.0
-var _note_nodes: Dictionary = {} # note_index -> MeshInstance3D
-var _materials: Array[StandardMaterial3D] = []
+var _note_nodes: Dictionary = {} # note_index -> Node3D
 var _lane_colors: Array[Color] = [
 	Color(0.35, 0.75, 1.0),
 	Color(1.0, 0.45, 0.6),
@@ -27,11 +29,6 @@ var _effects: Array = [] # { node, age, lifetime, base_scale }
 
 func _ready() -> void:
 	_build_highway()
-	_materials = [
-		_make_mat(_lane_colors[0]),
-		_make_mat(_lane_colors[1]),
-		_make_mat(_lane_colors[2]),
-	]
 
 
 func setup_notes(notes: Array, timing: Timing) -> void:
@@ -45,29 +42,85 @@ func setup_notes(notes: Array, timing: Timing) -> void:
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
 		var lane := int(note["position"])
-		var node := MeshInstance3D.new()
-		node.set_meta("note_index", i)
-		node.set_meta("lane", lane)
-		node.set_meta("type", str(note["type"]))
-		node.set_meta("start_ms", timing.beat_to_ms(float(note["start"])))
+		var color := _lane_colors[lane]
+		var root := Node3D.new()
+		root.set_meta("note_index", i)
+		root.set_meta("lane", lane)
+		root.set_meta("type", str(note["type"]))
+		root.set_meta("start_ms", timing.beat_to_ms(float(note["start"])))
 		if str(note["type"]) == "long":
-			node.set_meta("end_ms", timing.beat_to_ms(float(note["end"])))
-			var box := BoxMesh.new()
-			box.size = Vector3(NOTE_WIDTH, 0.22, 1.0)
-			node.mesh = box
+			root.set_meta("end_ms", timing.beat_to_ms(float(note["end"])))
+			_build_long_note(root, color)
 		else:
-			var box2 := BoxMesh.new()
-			box2.size = Vector3(NOTE_WIDTH, 0.28, SINGLE_DEPTH)
-			node.mesh = box2
-		node.material_override = _materials[lane]
-		add_child(node)
-		_note_nodes[i] = node
+			_build_single_note(root, color)
+		add_child(root)
+		_note_nodes[i] = root
+
+
+func _build_single_note(root: Node3D, color: Color) -> void:
+	# Tall chip + bright near-edge lip so neighbors don't read as one bar.
+	var body := MeshInstance3D.new()
+	body.name = "Body"
+	var box := BoxMesh.new()
+	box.size = Vector3(NOTE_WIDTH, 0.38, SINGLE_DEPTH)
+	body.mesh = box
+	body.material_override = _make_mat(color, 1.7)
+	body.position = Vector3(0.0, 0.2, 0.0)
+	root.add_child(body)
+
+	var lip := MeshInstance3D.new()
+	lip.name = "Lip"
+	var lip_box := BoxMesh.new()
+	lip_box.size = Vector3(NOTE_WIDTH * 1.05, 0.12, 0.1)
+	lip.mesh = lip_box
+	var lip_color := Color(1.0, 1.0, 1.0).lerp(color, 0.25)
+	lip.material_override = _make_mat(lip_color, 3.2)
+	# Near edge of the chip (toward judge / player).
+	lip.position = Vector3(0.0, 0.36, -SINGLE_DEPTH * 0.5 + 0.05)
+	root.add_child(lip)
+
+
+func _build_long_note(root: Node3D, color: Color) -> void:
+	var body_color := color.darkened(0.35)
+	body_color.a = 0.85
+	var body := MeshInstance3D.new()
+	body.name = "Body"
+	var body_box := BoxMesh.new()
+	body_box.size = Vector3(LONG_BODY_WIDTH, 0.12, 1.0)
+	body.mesh = body_box
+	body.material_override = _make_mat(body_color, 0.9)
+	root.add_child(body)
+
+	var head := MeshInstance3D.new()
+	head.name = "Head"
+	var head_box := BoxMesh.new()
+	head_box.size = Vector3(NOTE_WIDTH, 0.36, HEAD_DEPTH)
+	head.mesh = head_box
+	head.material_override = _make_mat(color, 2.2)
+	root.add_child(head)
+
+	var head_lip := MeshInstance3D.new()
+	head_lip.name = "HeadLip"
+	var hl := BoxMesh.new()
+	hl.size = Vector3(NOTE_WIDTH * 1.05, 0.12, 0.1)
+	head_lip.mesh = hl
+	head_lip.material_override = _make_mat(Color(1.0, 1.0, 1.0).lerp(color, 0.2), 3.4)
+	root.add_child(head_lip)
+
+	var tail := MeshInstance3D.new()
+	tail.name = "Tail"
+	var tail_box := BoxMesh.new()
+	tail_box.size = Vector3(NOTE_WIDTH * 0.92, 0.28, TAIL_DEPTH)
+	tail.mesh = tail_box
+	var tail_color := color.lightened(0.2)
+	tail.material_override = _make_mat(tail_color, 2.0)
+	root.add_child(tail)
 
 
 func update_visuals(now_ms: float) -> void:
 	var approach := BASE_APPROACH_MS / maxf(scroll_speed, 0.05)
 	for idx in _note_nodes.keys():
-		var node: MeshInstance3D = _note_nodes[idx]
+		var node: Node3D = _note_nodes[idx]
 		if not is_instance_valid(node):
 			continue
 		if not node.visible and _resolved.has(idx):
@@ -81,7 +134,6 @@ func update_visuals(now_ms: float) -> void:
 		if _resolved.has(idx):
 			var state: Dictionary = _resolved[idx]
 			if bool(state.get("good", false)):
-				# Keep successful notes at/above the judge line, then fade out.
 				state["fade"] = float(state.get("fade", 1.0)) - 0.045
 				var fade: float = float(state["fade"])
 				_resolved[idx] = state
@@ -89,39 +141,64 @@ func update_visuals(now_ms: float) -> void:
 					node.visible = false
 					continue
 				node.visible = true
-				node.position = Vector3(x, 0.18, JUDGE_Z)
-				var mat := node.material_override as StandardMaterial3D
-				if mat:
-					var c := mat.albedo_color
-					c.a = clampf(fade, 0.0, 1.0)
-					mat.albedo_color = c
-					mat.emission_energy_multiplier = 1.6 * fade
+				node.position = Vector3(x, 0.0, JUDGE_Z)
+				_fade_note_materials(node, fade)
 				continue
 			# Miss: allow natural scroll below, then hide.
 			pass
 
 		if ntype == "single":
-			# Place so the near (player-facing) edge sits on the judge line at hit time.
+			# Root at chip center; near lip sits on judge line at hit time.
 			var z := _time_to_z(start_ms, now_ms, approach) + SINGLE_DEPTH * 0.5
 			node.visible = z > JUDGE_Z - 1.2 and z < SPAWN_Z + 2.0
-			node.position = Vector3(x, 0.18, z)
+			node.position = Vector3(x, 0.0, z)
 		else:
 			var end_ms: float = node.get_meta("end_ms")
 			var z_start := _time_to_z(start_ms, now_ms, approach)
 			var z_end := _time_to_z(end_ms, now_ms, approach)
-			# Successful long head: clamp near side to judge line while still holding.
 			if _resolved.has(idx) and bool(_resolved[idx].get("long_head_good", false)):
 				z_start = maxf(z_start, JUDGE_Z)
 			var z_far := maxf(z_start, z_end)
 			var z_near := minf(z_start, z_end)
-			var length := maxf(0.25, z_far - z_near)
-			var mesh := node.mesh as BoxMesh
-			if mesh:
-				mesh.size = Vector3(NOTE_WIDTH, 0.22, length)
+			var length := maxf(HEAD_DEPTH + TAIL_DEPTH, z_far - z_near)
 			node.visible = z_far > JUDGE_Z - 1.2 and z_near < SPAWN_Z + 2.0
-			node.position = Vector3(x, 0.15, (z_far + z_near) * 0.5)
+			node.position = Vector3(x, 0.0, 0.0)
+			_layout_long_parts(node, z_near, z_far, length)
 
 	_update_effects()
+
+
+func _layout_long_parts(root: Node3D, z_near: float, z_far: float, length: float) -> void:
+	var body := root.get_node_or_null("Body") as MeshInstance3D
+	var head := root.get_node_or_null("Head") as MeshInstance3D
+	var head_lip := root.get_node_or_null("HeadLip") as MeshInstance3D
+	var tail := root.get_node_or_null("Tail") as MeshInstance3D
+	var body_len := maxf(0.2, length - HEAD_DEPTH * 0.35 - TAIL_DEPTH * 0.35)
+	var body_z := (z_near + z_far) * 0.5
+	if body:
+		var mesh := body.mesh as BoxMesh
+		if mesh:
+			mesh.size = Vector3(LONG_BODY_WIDTH, 0.12, body_len)
+		body.position = Vector3(0.0, 0.1, body_z)
+	if head:
+		# Head sits on the near (judge) side.
+		head.position = Vector3(0.0, 0.2, z_near + HEAD_DEPTH * 0.5)
+	if head_lip:
+		head_lip.position = Vector3(0.0, 0.36, z_near + 0.05)
+	if tail:
+		tail.position = Vector3(0.0, 0.18, z_far - TAIL_DEPTH * 0.5)
+
+
+func _fade_note_materials(root: Node3D, fade: float) -> void:
+	for child in root.get_children():
+		if child is MeshInstance3D:
+			var mat := (child as MeshInstance3D).material_override as StandardMaterial3D
+			if mat == null:
+				continue
+			var c := mat.albedo_color
+			c.a = clampf(fade, 0.0, 1.0)
+			mat.albedo_color = c
+			mat.emission_energy_multiplier = maxf(0.1, mat.emission_energy_multiplier * 0.96)
 
 
 func resolve_note(note_index: int, lane: int, grade: Judge.Grade, is_long_release: bool = false) -> void:
@@ -132,7 +209,7 @@ func resolve_note(note_index: int, lane: int, grade: Judge.Grade, is_long_releas
 
 	if not _note_nodes.has(note_index):
 		return
-	var node: MeshInstance3D = _note_nodes[note_index]
+	var node: Node3D = _note_nodes[note_index]
 	if not is_instance_valid(node):
 		return
 
@@ -144,12 +221,21 @@ func resolve_note(note_index: int, lane: int, grade: Judge.Grade, is_long_releas
 		return
 
 	if good:
-		# Duplicate material so fade doesn't affect other notes on same lane.
-		var src := node.material_override as StandardMaterial3D
-		if src:
-			node.material_override = src.duplicate()
+		# Duplicate materials so fade doesn't affect other notes.
+		for child in node.get_children():
+			if child is MeshInstance3D:
+				var mi := child as MeshInstance3D
+				var src := mi.material_override as StandardMaterial3D
+				if src:
+					mi.material_override = src.duplicate()
 		_resolved[note_index] = {"good": true, "fade": 1.0}
-		node.position = Vector3(LANE_X[lane], 0.18, JUDGE_Z)
+		node.position = Vector3(LANE_X[lane], 0.0, JUDGE_Z)
+		if ntype == "long":
+			# Collapse hold trail into a short flash at the judge line.
+			_layout_long_parts(node, JUDGE_Z, JUDGE_Z + 0.7, 0.7)
+			var body := node.get_node_or_null("Body") as Node3D
+			if body:
+				body.visible = false
 	else:
 		_resolved[note_index] = {"good": false, "fade": 1.0}
 
@@ -378,12 +464,12 @@ func _build_highway() -> void:
 	add_child(judge)
 
 
-func _make_mat(color: Color) -> StandardMaterial3D:
+func _make_mat(color: Color, energy: float = 1.6) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = Color(color.r, color.g, color.b, 1.0)
+	mat.albedo_color = Color(color.r, color.g, color.b, color.a)
 	mat.emission_enabled = true
-	mat.emission = color
-	mat.emission_energy_multiplier = 1.6
+	mat.emission = Color(color.r, color.g, color.b)
+	mat.emission_energy_multiplier = energy
 	return mat

@@ -27,6 +27,8 @@ var _paused: bool = false
 var _started: bool = false
 var _finished: bool = false
 var _audio_length_ms: float = 0.0
+var _audio_ended: bool = false
+var _post_audio_ms: float = 0.0
 var _judge_fade_t: float = 0.0
 var _tat_player: AudioStreamPlayer
 
@@ -84,9 +86,17 @@ func _ready() -> void:
 		return
 	audio_player.stream = stream
 	_audio_length_ms = stream.get_length() * 1000.0
+	if not audio_player.finished.is_connected(_on_audio_finished):
+		audio_player.finished.connect(_on_audio_finished)
+	_audio_ended = false
+	_post_audio_ms = 0.0
 	audio_player.play()
 	_started = true
 	_update_hud()
+
+
+func _on_audio_finished() -> void:
+	_audio_ended = true
 
 
 func _process(delta: float) -> void:
@@ -94,6 +104,12 @@ func _process(delta: float) -> void:
 		return
 	if _paused:
 		return
+
+	# Playback position freezes when the stream ends; keep a virtual clock so
+	# late auto-miss / finish thresholds can still be reached.
+	if _audio_ended or not audio_player.playing:
+		_audio_ended = true
+		_post_audio_ms += delta * 1000.0
 
 	var now := _now_ms()
 	highway.update_visuals(now)
@@ -104,7 +120,8 @@ func _process(delta: float) -> void:
 		_judge_fade_t -= delta
 		judge_label.modulate.a = clampf(_judge_fade_t / 0.4, 0.0, 1.0)
 
-	if now >= _audio_length_ms + float(AppConfig.judge_eng_ms) + 200.0:
+	var end_grace := float(AppConfig.judge_eng_ms) + 200.0
+	if now >= _audio_length_ms + end_grace or (_audio_ended and _post_audio_ms >= end_grace):
 		_finish_song()
 
 
@@ -132,7 +149,11 @@ func _toggle_pause() -> void:
 
 
 func _now_ms() -> float:
-	var raw := audio_player.get_playback_position() * 1000.0
+	var raw: float
+	if _audio_ended:
+		raw = _audio_length_ms + _post_audio_ms
+	else:
+		raw = audio_player.get_playback_position() * 1000.0
 	var latency_ms := AudioServer.get_output_latency() * 1000.0
 	return raw + float(AppConfig.audio_offset_ms) + latency_ms
 
