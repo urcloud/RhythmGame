@@ -1,0 +1,20 @@
+{
+  "formatVersion": 1,
+  "meta": {
+    "title": "Always With Me",
+    "artist": "Unknown",
+    "audio": "../../sample/Always With Me.mp3",
+    "bpm": 120,
+    "offsetBeats": 0,
+    "difficulty": 5
+  },
+  "notes": [
+    { "type": "single", "start": 4.0, "position": 0 },
+    { "type": "single", "start": 5.0, "position": 1 },
+    { "type": "single", "start": 6.0, "position": 2 },
+    { "type": "long", "start": 8.0, "end": 12.0, "position": 1 },
+    { "type": "single", "start": 12.0, "position": 0 },
+    { "type": "single", "start": 13.0, "position": 2 },
+    { "type": "long", "start": 16.0, "end": 20.0, "position": 0 }
+  ]
+}

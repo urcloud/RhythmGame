@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rhythmgame.local/format/chart.schema.json",
+  "title": "RhythmGame Chart",
+  "description": "Constant-BPM chart file: song metadata and a list of notes timed in beats.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["formatVersion", "meta", "notes"],
+  "properties": {
+    "formatVersion": {
+      "type": "integer",
+      "const": 1,
+      "description": "Chart format version. Currently always 1."
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "artist",
+        "audio",
+        "bpm",
+        "offsetBeats",
+        "difficulty"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Song title."
+        },
+        "artist": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Artist name. Use \"Unknown\" if unavailable."
+        },
+        "audio": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path to the mp3 file, relative to this chart file."
+        },
+        "bpm": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Constant BPM for the entire song."
+        },
+        "offsetBeats": {
+          "type": "number",
+          "description": "Beat offset aligning beat 0 to the audio timeline. Usually 0."
+        },
+        "difficulty": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Difficulty level from 1 (easiest) to 10 (hardest)."
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "description": "List of notes. Prefer ascending order by start.",
+      "items": {
+        "$ref": "#/$defs/note"
+      }
+    }
+  },
+  "$defs": {
+    "note": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "start", "position"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["single", "long"],
+          "description": "Note type."
+        },
+        "start": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Start time in beats (>= 0)."
+        },
+        "end": {
+          "type": "number",
+          "minimum": 0,
+          "description": "End time in beats. Required for long notes; must be omitted for single notes."
+        },
+        "position": {
+          "type": "integer",
+          "enum": [0, 1, 2],
+          "description": "Lane index: 0, 1, or 2."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "single" } },
+            "required": ["type"]
+          },
+          "then": {
+            "not": { "required": ["end"] }
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "long" } },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["end"],
+            "properties": {
+              "end": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
