@@ -6,6 +6,7 @@ game/.import/
 game/build/
 game/export/
 game/dist/
+dist/
 *.translation
 
 # Local Godot engine binary / archive (scripts in tools/ stay tracked)

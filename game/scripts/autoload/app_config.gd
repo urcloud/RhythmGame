@@ -3,7 +3,8 @@ extends Node
 const CONFIG_PATH := "user://config.json"
 const DEFAULT_PATH := "res://config/default_config.json"
 
-var chart_dir: String = "../chart"
+# Relative to content root: repo root in editor, exe folder when exported.
+var chart_dir: String = "chart"
 var scroll_speed: float = 1.0
 var audio_offset_ms: int = 0
 var judge_iya_ms: int = 45
@@ -116,11 +117,25 @@ func apply_window_settings() -> void:
 		DisplayServer.window_set_size(Vector2i(window_width, window_height))
 
 
+func content_root() -> String:
+	## Folder that owns `chart/` and `sample/` for loose files.
+	## Editor: repository root (parent of `game/`). Export: directory of the .exe.
+	if OS.has_feature("editor"):
+		return ProjectSettings.globalize_path("res://").rstrip("/").path_join("..").simplify_path()
+	return OS.get_executable_path().get_base_dir()
+
+
 func resolve_chart_dir() -> String:
-	var project_root := ProjectSettings.globalize_path("res://").rstrip("/")
-	if chart_dir.begins_with("/") or (chart_dir.length() > 2 and chart_dir[1] == ":"):
-		return chart_dir
-	return project_root.path_join(chart_dir).simplify_path()
+	if _is_absolute_path(chart_dir):
+		return chart_dir.simplify_path()
+	return content_root().path_join(chart_dir).simplify_path()
+
+
+func _is_absolute_path(path: String) -> bool:
+	if path.is_absolute_path():
+		return true
+	# Windows drive path (Godot may not treat all as absolute on every host).
+	return path.length() > 2 and path[1] == ":"
 
 
 func lane_keys(lane: int) -> PackedStringArray:

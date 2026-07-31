@@ -50,9 +50,43 @@
 ### 차트 디렉터리
 
 - 플레이 목록에 올릴 차트 루트 경로는 **게임 config**의 `chart_dir`로 읽는다.
-- 기본값: 저장소 기준 `chart/` (프로젝트에서 이 경로를 가리키도록 config 기본값을 둔다).
+- 기본값: `chart` (상대경로).
+- 상대경로의 기준(**content root**):
+  - 에디터: 저장소 루트 (`game/`의 부모) → `chart/`
+  - Windows export: `.exe`가 있는 폴더 → `exe옆/chart/`
 - 엔진은 `chart_dir` 아래의 `*.json` 차트 파일을 스캔한다.
+- `meta.audio`는 **차트 파일 기준 상대경로**다. 현재 차트는 `../sample/*.mp3`를 쓰므로 배포 시 `sample/`도 exe 옆에 둔다.
 - 경로는 이후 config만 바꿔 변경한다. 포맷·스키마는 그대로 둔다.
+
+## Windows 배포 (exe와 chart 분리)
+
+차트·mp3는 PCK에 넣지 않고 **exe 옆 폴더**로 배포한다.
+
+권장 폴더:
+
+```
+RhythmGame/
+  RhythmGame.exe
+  chart/                 ← *.chart.json (추가/교체 가능)
+  sample/                ← mp3 (차트의 ../sample/ 경로)
+  README.txt
+```
+
+패키징:
+
+```bash
+# Godot Editor에서 Windows export template을 한 번 설치한 뒤
+./tools/package_windows.sh
+# → dist/RhythmGame/ 생성
+```
+
+수동 export:
+
+1. Godot에서 `game/` 열고 **Project → Export → Windows Desktop**
+2. `game/build/windows/RhythmGame.exe`로 내보낸다 (`embed_pck=true`라 pck는 exe에 포함)
+3. `chart/`, `sample/`을 exe와 같은 폴더에 복사한다
+
+설정(`chart_dir`, 키맵 등)은 `%APPDATA%\Godot\app_userdata\RhythmGame\config.json`에 저장된다.
 
 ## 입력
 
@@ -158,8 +192,11 @@
 
 ## 비주얼
 
-- 3레인 3D 하이웨이. 노트가 원근감 있게 판정선으로 접근한다.
-- 싱글 노트는 **플레이어 쪽(근) 변**이 판정선에 닿는 시각이 판정 시각과 맞도록 배치한다.
+- 컨셉: **강철 공장 크러셔**가 컨베이어로 내려오는 **바이러스 블록**을 파쇄한다.
+- 3레인 3D 하이웨이. 노트가 원근감 있게 판정선(크러셔)으로 접근한다.
+- 노트는 상하 비대칭이다. **플레이어 쪽(근) 변**에만 두꺼운 히트 플랜지/테두리가 있어 연달아 오는 노트가 겹쳐 보이지 않는다.
+- 싱글 노트는 근변이 판정선에 닿는 시각이 판정 시각과 맞도록 배치한다.
+- 롱노트 홀드 중에는 판정선에서 블록이 깨지는 파편·크랙 연출이 나와 홀드 성공을 바로 알 수 있다.
 - 구현 세부는 `game/` 코드에 두며, 채보 포맷에는 연출 필드를 넣지 않는다.
 
 ## 범위
