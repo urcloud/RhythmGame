@@ -110,7 +110,8 @@ func _build_highway() -> void:
 	plane.size = Vector3(4.2, 0.05, SPAWN_Z + 4.0)
 	floor_mesh.mesh = plane
 	var floor_mat := StandardMaterial3D.new()
-	floor_mat.albedo_color = Color(0.08, 0.1, 0.14)
+	floor_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	floor_mat.albedo_color = Color(0.12, 0.15, 0.22)
 	floor_mesh.material_override = floor_mat
 	floor_mesh.position = Vector3(0, -0.05, SPAWN_Z * 0.5)
 	floor_mesh.name = "Floor"
@@ -123,10 +124,11 @@ func _build_highway() -> void:
 		lm.size = Vector3(1.0, 0.02, SPAWN_Z + 2.0)
 		line.mesh = lm
 		var mat := StandardMaterial3D.new()
-		mat.albedo_color = Color(0.15, 0.18, 0.24)
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.albedo_color = Color(0.22, 0.26, 0.34)
 		mat.emission_enabled = true
-		mat.emission = Color(0.2, 0.25, 0.35)
-		mat.emission_energy_multiplier = 0.2
+		mat.emission = Color(0.25, 0.3, 0.4)
+		mat.emission_energy_multiplier = 0.35
 		line.material_override = mat
 		line.position = Vector3(LANE_X[i], 0.0, SPAWN_Z * 0.5)
 		line.name = "LaneFlash%d" % i
@@ -150,8 +152,9 @@ func _build_highway() -> void:
 
 func _make_mat(color: Color) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.albedo_color = color
 	mat.emission_enabled = true
 	mat.emission = color
-	mat.emission_energy_multiplier = 0.8
+	mat.emission_energy_multiplier = 1.6
 	return mat

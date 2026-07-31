@@ -30,6 +30,11 @@ var _judge_fade_t: float = 0.0
 
 func _ready() -> void:
 	pause_overlay.visible = false
+	# Look down the highway (+Z): notes approach from far (SPAWN_Z) to judge (0).
+	var cam := $Camera3D as Camera3D
+	if cam:
+		cam.global_position = Vector3(0.0, 5.5, -7.5)
+		cam.look_at(Vector3(0.0, 0.0, 14.0), Vector3.UP)
 	_inputs = InputLanes.new()
 	_inputs.lane_pressed.connect(_on_lane_pressed)
 	_inputs.lane_released.connect(_on_lane_released)

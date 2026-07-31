@@ -1,19 +1,31 @@
-[gd_scene load_steps=3 format=3 uid="uid://gameplay001"]
+[gd_scene load_steps=4 format=3 uid="uid://gameplay001"]
 
 [ext_resource type="Script" path="res://scripts/play/gameplay_controller.gd" id="1_gp"]
 [ext_resource type="Script" path="res://scripts/play/note_highway.gd" id="2_hw"]
+
+[sub_resource type="Environment" id="Environment_hw"]
+background_mode = 1
+background_color = Color(0.04, 0.05, 0.08, 1)
+ambient_light_source = 1
+ambient_light_color = Color(0.75, 0.8, 0.9, 1)
+ambient_light_energy = 0.85
 
 [node name="Gameplay" type="Node3D"]
 script = ExtResource("1_gp")
 
 [node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.8870109, 0.4617486, 0, -0.4617486, 0.8870109, 0, 4.2, -6.5)
-fov = 55.0
+transform = Transform3D(1, 0, 0, 0, 0.9063078, 0.4226183, 0, -0.4226183, 0.9063078, 0, 5.5, -7.5)
+fov = 60.0
 current = true
+far = 80.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_hw")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 8, 0)
-shadow_enabled = true
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 10, 4)
+light_energy = 1.4
+shadow_enabled = false
 
 [node name="Highway" type="Node3D" parent="."]
 script = ExtResource("2_hw")
