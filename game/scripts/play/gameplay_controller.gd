@@ -92,6 +92,8 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _inputs == null:
+		return
 	if event.is_action_pressed("ui_cancel"):
 		_toggle_pause()
 		get_viewport().set_input_as_handled()

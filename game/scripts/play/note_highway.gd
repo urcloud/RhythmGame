@@ -1,7 +1,7 @@
 class_name NoteHighway
 extends Node3D
 
-const LANE_X := [-1.2, 0.0, 1.2]
+const LANE_X: Array[float] = [-1.2, 0.0, 1.2]
 const JUDGE_Z := 0.0
 const SPAWN_Z := 28.0
 const BASE_APPROACH_MS := 2000.0
@@ -57,7 +57,7 @@ func update_visuals(now_ms: float) -> void:
 		var lane: int = node.get_meta("lane")
 		var start_ms: float = node.get_meta("start_ms")
 		var ntype: String = node.get_meta("type")
-		var x := LANE_X[lane]
+		var x: float = LANE_X[lane]
 
 		if ntype == "single":
 			var z := _time_to_z(start_ms, now_ms, approach)
