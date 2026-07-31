@@ -1,0 +1,1200 @@
+{
+  "formatVersion": 1,
+  "meta": {
+    "title": "Always With Me",
+    "artist": "Unknown",
+    "audio": "../sample/Always With Me.mp3",
+    "bpm": 58.0,
+    "offsetBeats": 1.2035,
+    "difficulty": 2
+  },
+  "notes": [
+    {
+      "type": "long",
+      "start": 0.0,
+      "end": 0.970275,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 1.0,
+      "end": 2.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 2.0,
+      "end": 3.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 3.0,
+      "end": 4.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 4.0,
+      "end": 5.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 5.0,
+      "end": 5.970275,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 6.0,
+      "end": 7.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 6.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 6.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 9.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 9.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 18.0,
+      "end": 18.970275,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 19.0,
+      "end": 20.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 19.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 24.0,
+      "end": 25.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 31.0,
+      "end": 31.970275,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 31.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 32.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 32.0,
+      "end": 32.970275,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 33.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 33.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 34.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 34.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 35.0,
+      "end": 36.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 35.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 36.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 37.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 39.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 42.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 45.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 46.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 47.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 47.0,
+      "end": 47.970275,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 48.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 48.0,
+      "end": 49.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 49.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 49.0,
+      "end": 49.970275,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 50.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 50.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 51.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 52.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 53.0,
+      "end": 54.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 54.0,
+      "end": 55.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 54.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 55.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 55.0,
+      "end": 55.970275,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 56.0,
+      "end": 57.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 57.0,
+      "end": 58.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 58.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 59.0,
+      "end": 60.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 60.0,
+      "end": 61.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 62.0,
+      "end": 62.970275,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 63.0,
+      "end": 64.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 66.0,
+      "end": 67.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 69.0,
+      "end": 70.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 71.0,
+      "end": 72.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 71.0,
+      "end": 71.970275,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 72.0,
+      "end": 73.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 74.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 75.0,
+      "end": 76.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 78.0,
+      "end": 79.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 81.0,
+      "end": 82.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 84.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 84.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 85.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 85.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 86.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 87.0,
+      "end": 88.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 88.0,
+      "end": 89.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 90.0,
+      "end": 91.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 91.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 92.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 92.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 93.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 93.0,
+      "end": 93.970275,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 94.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 95.0,
+      "end": 96.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 95.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 96.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 97.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 97.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 98.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 98.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 98.0,
+      "end": 98.970275,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 99.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 99.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 99.0,
+      "end": 99.970275,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 100.0,
+      "end": 100.970275,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 101.0,
+      "end": 102.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 103.0,
+      "end": 103.970275,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 104.0,
+      "end": 105.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 105.0,
+      "end": 106.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 106.0,
+      "end": 107.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 110.0,
+      "end": 110.970275,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 110.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 111.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 111.0,
+      "end": 111.970275,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 112.0,
+      "end": 112.970275,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 113.0,
+      "end": 114.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 116.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 117.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 117.0,
+      "end": 117.970275,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 118.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 119.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 120.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 121.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 121.0,
+      "end": 123.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 122.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 122.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 123.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 124.0,
+      "end": 126.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 124.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 125.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 127.0,
+      "end": 129.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 127.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 127.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 137.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 137.0,
+      "end": 138.970275,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 137.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 138.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 138.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 139.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 139.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 139.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 140.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 140.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 140.0,
+      "end": 142.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 142.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 147.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 148.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 149.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 149.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 150.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 152.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 153.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 154.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 156.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 157.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 159.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 160.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 162.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 163.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 165.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 166.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 168.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 169.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 171.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 171.0,
+      "end": 171.970275,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 172.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 172.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 174.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 174.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 175.0,
+      "end": 176.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 175.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 177.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 178.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 183.0,
+      "end": 184.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 183.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 184.0,
+      "end": 184.970275,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 185.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 185.0,
+      "end": 185.970275,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 186.0,
+      "end": 186.970275,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 186.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 187.0,
+      "end": 188.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 188.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 188.0,
+      "end": 189.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 189.0,
+      "end": 190.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 190.0,
+      "end": 191.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 192.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 192.0,
+      "end": 193.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 194.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 195.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 195.0,
+      "end": 196.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 196.0,
+      "end": 197.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 197.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 198.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 198.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 199.0,
+      "end": 200.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 201.0,
+      "end": 202.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 202.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 204.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 205.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 208.0,
+      "end": 208.970275,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 209.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 210.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 215.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 219.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 219.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 219.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 220.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 220.0,
+      "end": 221.970275,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 221.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 222.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 222.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 223.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 223.0,
+      "end": 225.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 226.0,
+      "position": 1
+    },
+    {
+      "type": "long",
+      "start": 226.0,
+      "end": 227.970275,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 227.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 228.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 229.0,
+      "end": 231.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 230.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 231.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 235.0,
+      "end": 235.970275,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 236.0,
+      "end": 236.970275,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 237.0,
+      "position": 2
+    },
+    {
+      "type": "long",
+      "start": 238.0,
+      "end": 239.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 239.0,
+      "end": 240.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 240.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 241.0,
+      "end": 242.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 241.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 248.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 251.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 252.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 252.0,
+      "position": 2
+    },
+    {
+      "type": "single",
+      "start": 253.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 256.0,
+      "position": 1
+    },
+    {
+      "type": "single",
+      "start": 258.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 259.0,
+      "position": 0
+    },
+    {
+      "type": "long",
+      "start": 264.0,
+      "end": 265.0,
+      "position": 0
+    },
+    {
+      "type": "single",
+      "start": 268.0,
+      "position": 2
+    }
+  ]
+}

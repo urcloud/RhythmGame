@@ -6,10 +6,23 @@ game/.import/
 game/build/
 game/export/
 game/dist/
-
-# Local Godot binary (optional tools/)
-tools/
 *.translation
+
+# Local Godot engine binary / archive (scripts in tools/ stay tracked)
+tools/Godot_*
+tools/godot
+tools/godot.zip
+tools/*.x86_64
+tools/*.exe
+tools/*.app/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+.venv/
+venv/
 
 # OS junk
 .DS_Store
