@@ -17,6 +17,8 @@ var _perfects: PackedInt32Array
 var _pending_by_lane: Array = [[], [], []] # queues of object indices still open
 var _object_states: Array = [] # judged or not
 var _active_long_release: Dictionary = {} # lane -> object order index waiting release
+## lane -> last press time_ms (consumed when used for a hit)
+var _press_buffer_ms: Array = [NAN, NAN, NAN]
 var _score: int = 0
 var _combo: int = 0
 var _max_combo: int = 0
@@ -95,6 +97,7 @@ func _process(delta: float) -> void:
 
 	var now := _now_ms()
 	highway.update_visuals(now)
+	_try_buffered_hits(now)
 	_auto_miss(now)
 
 	if _judge_fade_t > 0.0:
@@ -129,7 +132,9 @@ func _toggle_pause() -> void:
 
 
 func _now_ms() -> float:
-	return audio_player.get_playback_position() * 1000.0
+	var raw := audio_player.get_playback_position() * 1000.0
+	var latency_ms := AudioServer.get_output_latency() * 1000.0
+	return raw + float(AppConfig.audio_offset_ms) + latency_ms
 
 
 func _on_lane_pressed(lane: int) -> void:
@@ -137,27 +142,16 @@ func _on_lane_pressed(lane: int) -> void:
 	highway.play_press_effect(lane)
 	_play_tat()
 	var now := _now_ms()
-	var idx := _find_nearest_pending_hit(lane, now)
-	if idx >= 0:
-		var obj: Dictionary = _objects[idx]
-		var target: float = float(obj["time_ms"])
-		var dt := absf(now - target)
-		var grade := Judge.grade_from_delta(dt, AppConfig.judge_iya_ms, AppConfig.judge_hihi_ms, AppConfig.judge_eng_ms)
-		if grade == Judge.Grade.MISS and now < target:
-			# too early outside window: ignore (don't consume)
-			if now < target - float(AppConfig.judge_eng_ms):
-				return
-		_resolve_object(idx, grade)
-		if bool(obj["is_long"]) and str(obj["kind"]) == "hit":
-			var release_idx := _find_release_for_note(int(obj["note_index"]))
-			if release_idx >= 0 and not _object_states[release_idx]:
-				_active_long_release[lane] = release_idx
+	_press_buffer_ms[lane] = now
+	if _try_hit_lane(lane, now, true):
 		return
 
 	# After a long start was already judged (including Miss), a later press can arm the release.
 	var arm_idx := _find_armable_release(lane, now)
 	if arm_idx >= 0:
 		_active_long_release[lane] = arm_idx
+		# Holding for release must not auto-hit a later note via the press buffer.
+		_press_buffer_ms[lane] = NAN
 
 
 func _play_tat() -> void:
@@ -168,6 +162,7 @@ func _play_tat() -> void:
 
 
 func _on_lane_released(lane: int) -> void:
+	_press_buffer_ms[lane] = NAN
 	if not _active_long_release.has(lane):
 		return
 	var idx: int = _active_long_release[lane]
@@ -177,8 +172,9 @@ func _on_lane_released(lane: int) -> void:
 	var obj: Dictionary = _objects[idx]
 	var end_ms: float = float(obj["time_ms"])
 	var now := _now_ms()
-	# Early release before end beat => Miss
-	if now < end_ms:
+	var eng := float(AppConfig.judge_eng_ms)
+	# Too early outside the window: break hold => Miss
+	if now < end_ms - eng:
 		_resolve_object(idx, Judge.Grade.MISS)
 		return
 	var dt := absf(now - end_ms)
@@ -186,7 +182,61 @@ func _on_lane_released(lane: int) -> void:
 	_resolve_object(idx, grade)
 
 
-func _find_nearest_pending_hit(lane: int, now: float) -> int:
+func _try_buffered_hits(now: float) -> void:
+	for lane in range(3):
+		if _active_long_release.has(lane):
+			continue
+		if is_nan(float(_press_buffer_ms[lane])):
+			continue
+		if not _inputs.is_lane_held(lane):
+			_press_buffer_ms[lane] = NAN
+			continue
+		_try_hit_lane(lane, now, false)
+
+
+## Attempt to judge a pending hit using press buffer and/or current time.
+## Returns true if a hit object was consumed.
+func _try_hit_lane(lane: int, now: float, from_press: bool) -> bool:
+	var press_t: float = float(_press_buffer_ms[lane])
+	if is_nan(press_t):
+		if from_press:
+			press_t = now
+		else:
+			return false
+
+	var idx := _find_best_pending_hit(lane, now, press_t, from_press)
+	if idx < 0:
+		return false
+
+	var obj: Dictionary = _objects[idx]
+	var target: float = float(obj["time_ms"])
+	var sample: float
+	if from_press:
+		sample = now
+	elif press_t <= target:
+		# Early press held through: wait until note time, then count as on-time.
+		if now < target:
+			return false
+		sample = target
+	else:
+		# Press was after the note (late buffer); use press time.
+		sample = press_t
+
+	var dt := absf(sample - target)
+	var grade := Judge.grade_from_delta(dt, AppConfig.judge_iya_ms, AppConfig.judge_hihi_ms, AppConfig.judge_eng_ms)
+	if grade == Judge.Grade.MISS:
+		return false
+
+	_press_buffer_ms[lane] = NAN
+	_resolve_object(idx, grade)
+	if bool(obj["is_long"]) and str(obj["kind"]) == "hit":
+		var release_idx := _find_release_for_note(int(obj["note_index"]))
+		if release_idx >= 0 and not _object_states[release_idx]:
+			_active_long_release[lane] = release_idx
+	return true
+
+
+func _find_best_pending_hit(lane: int, now: float, press_t: float, from_press: bool) -> int:
 	var queue: Array = _pending_by_lane[lane]
 	var best := -1
 	var best_dt := INF
@@ -196,7 +246,16 @@ func _find_nearest_pending_hit(lane: int, now: float) -> int:
 		if _object_states[idx]:
 			continue
 		var t: float = float(_objects[idx]["time_ms"])
-		var dt := absf(now - t)
+		var dt: float
+		if from_press:
+			dt = absf(now - t)
+		elif press_t <= t:
+			# Held from before the note: eligible once we reach the note time.
+			if now < t:
+				continue
+			dt = 0.0
+		else:
+			dt = absf(press_t - t)
 		if dt <= window and dt < best_dt:
 			best_dt = dt
 			best = idx

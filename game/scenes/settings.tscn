@@ -96,6 +96,19 @@ min_value = 1.0
 max_value = 500.0
 value = 150.0
 
+[node name="AudioOffsetLabel" type="Label" parent="Margin/VBox/Grid"]
+layout_mode = 2
+text = "audio_offset_ms"
+
+[node name="AudioOffsetSpin" type="SpinBox" parent="Margin/VBox/Grid"]
+layout_mode = 2
+min_value = -200.0
+max_value = 200.0
+step = 1.0
+value = 0.0
+allow_greater = false
+allow_lesser = false
+
 [node name="Lane0Label" type="Label" parent="Margin/VBox/Grid"]
 layout_mode = 2
 text = "lane0_keys"

@@ -1,6 +1,7 @@
 {
   "chart_dir": "../chart",
   "scroll_speed": 1.0,
+  "audio_offset_ms": 0,
   "judge_iya_ms": 45,
   "judge_hihi_ms": 90,
   "judge_eng_ms": 150,

@@ -1,6 +1,11 @@
 class_name ChartValidator
 extends RefCounted
 
+## Minimum long-note duration in audio ms (matches tools/osu_to_chart.py).
+const MIN_HOLD_MS := 100.0
+## Minimum gap after a long end before the next same-lane note (audio ms).
+const MIN_GAP_AFTER_LONG_MS := 30.0
+
 
 static func validate(data: Variant) -> String:
 	if typeof(data) != TYPE_DICTIONARY:
@@ -32,7 +37,10 @@ static func validate(data: Variant) -> String:
 		if note_err != "":
 			return note_err
 
-	var semantic := _validate_semantics(notes)
+	var meta: Dictionary = root["meta"]
+	var bpm := float(meta["bpm"])
+	var offset_beats := float(meta["offsetBeats"])
+	var semantic := _validate_semantics(notes, bpm, offset_beats)
 	if semantic != "":
 		return semantic
 
@@ -114,7 +122,11 @@ static func _validate_note(note_v: Variant, index: int) -> String:
 	return ""
 
 
-static func _validate_semantics(notes: Array) -> String:
+static func _beat_to_ms(beat: float, bpm: float, offset_beats: float) -> float:
+	return (beat + offset_beats) * (60000.0 / bpm)
+
+
+static func _validate_semantics(notes: Array, bpm: float, offset_beats: float) -> String:
 	var starts: Dictionary = {}
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
@@ -128,11 +140,16 @@ static func _validate_semantics(notes: Array) -> String:
 		var note: Dictionary = notes[i]
 		if str(note["type"]) != "long":
 			continue
+		var start_b := float(note["start"])
+		var end_b := float(note["end"])
+		var dur_ms := _beat_to_ms(end_b, bpm, offset_beats) - _beat_to_ms(start_b, bpm, offset_beats)
+		if dur_ms < MIN_HOLD_MS:
+			return "long note %d too short (%.1f ms < %.0f ms)" % [i, dur_ms, MIN_HOLD_MS]
 		longs.append({
 			"i": i,
 			"pos": int(note["position"]),
-			"start": float(note["start"]),
-			"end": float(note["end"]),
+			"start": start_b,
+			"end": end_b,
 		})
 
 	for a_i in range(longs.size()):
@@ -144,4 +161,40 @@ static func _validate_semantics(notes: Array) -> String:
 			# overlap if intervals overlap; touching ends OK
 			if float(a["start"]) < float(b["end"]) and float(b["start"]) < float(a["end"]):
 				return "overlapping long notes on position %d (notes %d and %d)" % [int(a["pos"]), int(a["i"]), int(b["i"])]
+
+	# No single strictly inside a same-lane long; min gap after long end.
+	for lane in range(3):
+		var lane_notes: Array = []
+		for i in range(notes.size()):
+			var n: Dictionary = notes[i]
+			if int(n["position"]) != lane:
+				continue
+			lane_notes.append({"i": i, "note": n})
+		lane_notes.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+			return float(a["note"]["start"]) < float(b["note"]["start"])
+		)
+		for entry in lane_notes:
+			var n: Dictionary = entry["note"]
+			if str(n["type"]) != "single":
+				continue
+			var s := float(n["start"])
+			for L in longs:
+				if int(L["pos"]) != lane:
+					continue
+				if float(L["start"]) < s and s < float(L["end"]):
+					return "single note %d inside long note %d on position %d" % [int(entry["i"]), int(L["i"]), lane]
+
+		for j in range(lane_notes.size()):
+			var cur: Dictionary = lane_notes[j]["note"]
+			if str(cur["type"]) != "long":
+				continue
+			if j + 1 >= lane_notes.size():
+				continue
+			var nxt: Dictionary = lane_notes[j + 1]["note"]
+			var gap_ms := _beat_to_ms(float(nxt["start"]), bpm, offset_beats) - _beat_to_ms(float(cur["end"]), bpm, offset_beats)
+			# 1ms tolerance for beat <-> ms rounding
+			if gap_ms + 1.0 < MIN_GAP_AFTER_LONG_MS:
+				return "gap after long note %d too small (%.1f ms < %.0f ms) before note %d on position %d" % [
+					int(lane_notes[j]["i"]), gap_ms, MIN_GAP_AFTER_LONG_MS, int(lane_notes[j + 1]["i"]), lane
+				]
 	return ""

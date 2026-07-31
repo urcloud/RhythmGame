@@ -4,6 +4,7 @@ extends Node3D
 const LANE_X: Array[float] = [-2.4, 0.0, 2.4]
 const LANE_WIDTH := 1.7
 const NOTE_WIDTH := 1.55
+const SINGLE_DEPTH := 0.5
 const JUDGE_Z := 0.0
 const SPAWN_Z := 28.0
 const BASE_APPROACH_MS := 2000.0
@@ -54,7 +55,7 @@ func setup_notes(notes: Array, timing: Timing) -> void:
 			node.mesh = box
 		else:
 			var box2 := BoxMesh.new()
-			box2.size = Vector3(NOTE_WIDTH, 0.28, 0.5)
+			box2.size = Vector3(NOTE_WIDTH, 0.28, SINGLE_DEPTH)
 			node.mesh = box2
 		node.material_override = _materials[lane]
 		add_child(node)
@@ -98,7 +99,8 @@ func update_visuals(now_ms: float) -> void:
 			pass
 
 		if ntype == "single":
-			var z := _time_to_z(start_ms, now_ms, approach)
+			# Place so the near (player-facing) edge sits on the judge line at hit time.
+			var z := _time_to_z(start_ms, now_ms, approach) + SINGLE_DEPTH * 0.5
 			node.visible = z > JUDGE_Z - 1.2 and z < SPAWN_Z + 2.0
 			node.position = Vector3(x, 0.18, z)
 		else:

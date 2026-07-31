@@ -5,6 +5,7 @@ extends Control
 @onready var iya_spin: SpinBox = $Margin/VBox/Grid/IyaSpin
 @onready var hihi_spin: SpinBox = $Margin/VBox/Grid/HihiSpin
 @onready var eng_spin: SpinBox = $Margin/VBox/Grid/EngSpin
+@onready var audio_offset_spin: SpinBox = $Margin/VBox/Grid/AudioOffsetSpin
 @onready var lane0_edit: LineEdit = $Margin/VBox/Grid/Lane0Edit
 @onready var lane1_edit: LineEdit = $Margin/VBox/Grid/Lane1Edit
 @onready var lane2_edit: LineEdit = $Margin/VBox/Grid/Lane2Edit
@@ -25,6 +26,7 @@ func _load_into_ui(data: Dictionary) -> void:
 	iya_spin.value = int(data.get("judge_iya_ms", 45))
 	hihi_spin.value = int(data.get("judge_hihi_ms", 90))
 	eng_spin.value = int(data.get("judge_eng_ms", 150))
+	audio_offset_spin.value = int(data.get("audio_offset_ms", 0))
 	lane0_edit.text = _keys_to_text(data.get("lane0_keys", []))
 	lane1_edit.text = _keys_to_text(data.get("lane1_keys", []))
 	lane2_edit.text = _keys_to_text(data.get("lane2_keys", []))
@@ -37,6 +39,7 @@ func _collect() -> Dictionary:
 	return {
 		"chart_dir": chart_dir_edit.text.strip_edges(),
 		"scroll_speed": float(scroll_spin.value),
+		"audio_offset_ms": int(audio_offset_spin.value),
 		"judge_iya_ms": int(iya_spin.value),
 		"judge_hihi_ms": int(hihi_spin.value),
 		"judge_eng_ms": int(eng_spin.value),

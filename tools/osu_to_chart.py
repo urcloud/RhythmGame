@@ -6,8 +6,11 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import re
 from pathlib import Path
+
+# Playability guards (must stay in sync with game ChartValidator).
+MIN_HOLD_MS = 100.0
+MIN_GAP_AFTER_LONG_MS = 30.0
 
 
 def parse_osu(text: str) -> dict:
@@ -125,7 +128,7 @@ def convert_osu_to_chart(
             )
 
     notes.sort(key=lambda n: (n["start"], n["position"], 0 if n["type"] == "single" else 1))
-    notes = dedupe_and_trim_overlaps(notes)
+    notes = sanitize_notes(notes, bpm, offset_beats)
 
     title = title_override or metadata.get("Title") or metadata.get("TitleUnicode") or osu_path.stem
     artist = artist_override or metadata.get("Artist") or metadata.get("ArtistUnicode") or "Unknown"
@@ -144,6 +147,119 @@ def convert_osu_to_chart(
         },
         "notes": notes,
     }
+
+
+def sanitize_notes(notes: list[dict], bpm: float, offset_beats: float) -> list[dict]:
+    """Enforce playable SPEC + engine guards: short holds, nested singles, LN gaps."""
+    ms_per_beat = 60000.0 / bpm
+
+    def to_ms(beat: float) -> float:
+        return (beat + offset_beats) * ms_per_beat
+
+    def to_beat(time_ms: float) -> float:
+        return time_ms / ms_per_beat - offset_beats
+
+    # 1) Short holds -> single
+    step1: list[dict] = []
+    for note in notes:
+        if note["type"] == "long":
+            dur_ms = to_ms(note["end"]) - to_ms(note["start"])
+            if dur_ms < MIN_HOLD_MS:
+                step1.append(
+                    {
+                        "type": "single",
+                        "start": note["start"],
+                        "position": note["position"],
+                    }
+                )
+                continue
+        step1.append(dict(note))
+
+    # 2) Dedupe (start, position) and trim long-long overlaps
+    step2 = dedupe_and_trim_overlaps(step1)
+
+    # 3) Drop singles that fall strictly inside a same-lane long
+    longs_by_pos: dict[int, list[tuple[float, float]]] = {0: [], 1: [], 2: []}
+    for note in step2:
+        if note["type"] == "long":
+            longs_by_pos[note["position"]].append((note["start"], note["end"]))
+
+    step3: list[dict] = []
+    for note in step2:
+        if note["type"] == "single":
+            start = note["start"]
+            pos = note["position"]
+            nested = False
+            for a, b in longs_by_pos[pos]:
+                if a < start < b:
+                    nested = True
+                    break
+            if nested:
+                continue
+        step3.append(note)
+
+    # 4) Ensure min gap after each long before the next same-lane note
+    by_lane: dict[int, list[dict]] = {0: [], 1: [], 2: []}
+    for note in step3:
+        by_lane[note["position"]].append(note)
+
+    fixed: list[dict] = []
+    for pos in range(3):
+        lane_notes = sorted(by_lane[pos], key=lambda n: (n["start"], 0 if n["type"] == "single" else 1))
+        i = 0
+        while i < len(lane_notes):
+            note = dict(lane_notes[i])
+            if note["type"] == "long" and i + 1 < len(lane_notes):
+                nxt = lane_notes[i + 1]
+                gap_ms = to_ms(nxt["start"]) - to_ms(note["end"])
+                if gap_ms < MIN_GAP_AFTER_LONG_MS - 1e-6:
+                    # Shorten with a tiny margin so beat rounding still clears the gap.
+                    new_end_ms = to_ms(nxt["start"]) - (MIN_GAP_AFTER_LONG_MS + 0.75)
+                    new_dur = new_end_ms - to_ms(note["start"])
+                    if new_dur >= MIN_HOLD_MS:
+                        note["end"] = round(to_beat(new_end_ms), 6)
+                    else:
+                        # Demote long to single at its start
+                        note = {
+                            "type": "single",
+                            "start": note["start"],
+                            "position": pos,
+                        }
+            fixed.append(note)
+            i += 1
+
+    # Re-run overlap/dedupe after gap edits, then drop any nested singles again
+    fixed = dedupe_and_trim_overlaps(fixed)
+    longs_by_pos = {0: [], 1: [], 2: []}
+    for note in fixed:
+        if note["type"] == "long":
+            longs_by_pos[note["position"]].append((note["start"], note["end"]))
+    final: list[dict] = []
+    seen: set[tuple[float, int]] = set()
+    for note in sorted(fixed, key=lambda n: (n["start"], n["position"])):
+        key = (note["start"], note["position"])
+        if key in seen:
+            continue
+        if note["type"] == "single":
+            nested = False
+            for a, b in longs_by_pos[note["position"]]:
+                if a < note["start"] < b:
+                    nested = True
+                    break
+            if nested:
+                continue
+        if note["type"] == "long":
+            if to_ms(note["end"]) - to_ms(note["start"]) < MIN_HOLD_MS - 1e-6:
+                note = {
+                    "type": "single",
+                    "start": note["start"],
+                    "position": note["position"],
+                }
+        seen.add((note["start"], note["position"]))
+        final.append(note)
+
+    final.sort(key=lambda n: (n["start"], n["position"], 0 if n["type"] == "single" else 1))
+    return final
 
 
 def dedupe_and_trim_overlaps(notes: list[dict]) -> list[dict]:

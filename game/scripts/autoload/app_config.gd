@@ -5,6 +5,7 @@ const DEFAULT_PATH := "res://config/default_config.json"
 
 var chart_dir: String = "../chart"
 var scroll_speed: float = 1.0
+var audio_offset_ms: int = 0
 var judge_iya_ms: int = 45
 var judge_hihi_ms: int = 90
 var judge_eng_ms: int = 150
@@ -32,6 +33,7 @@ func get_as_dict() -> Dictionary:
 	return {
 		"chart_dir": chart_dir,
 		"scroll_speed": scroll_speed,
+		"audio_offset_ms": audio_offset_ms,
 		"judge_iya_ms": judge_iya_ms,
 		"judge_hihi_ms": judge_hihi_ms,
 		"judge_eng_ms": judge_eng_ms,
@@ -52,6 +54,10 @@ func validate_candidate(data: Dictionary) -> String:
 	var steps := int(round(speed / 0.05))
 	if absf(speed - steps * 0.05) > 0.001:
 		return "scroll_speed must be a multiple of 0.05"
+
+	var offset := int(data.get("audio_offset_ms", audio_offset_ms))
+	if offset < -200 or offset > 200:
+		return "audio_offset_ms must be between -200 and 200"
 
 	var iya := int(data.get("judge_iya_ms", judge_iya_ms))
 	var hihi := int(data.get("judge_hihi_ms", judge_hihi_ms))
@@ -134,6 +140,8 @@ func _apply_dict(data: Dictionary) -> void:
 		chart_dir = str(data["chart_dir"])
 	if data.has("scroll_speed"):
 		scroll_speed = float(data["scroll_speed"])
+	if data.has("audio_offset_ms"):
+		audio_offset_ms = int(data["audio_offset_ms"])
 	if data.has("judge_iya_ms"):
 		judge_iya_ms = int(data["judge_iya_ms"])
 	if data.has("judge_hihi_ms"):
