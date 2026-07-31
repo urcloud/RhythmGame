@@ -33,8 +33,9 @@ func _ready() -> void:
 	# Look down the highway (+Z): notes approach from far (SPAWN_Z) to judge (0).
 	var cam := $Camera3D as Camera3D
 	if cam:
-		cam.global_position = Vector3(0.0, 5.5, -7.5)
+		cam.global_position = Vector3(0.0, 6.2, -8.2)
 		cam.look_at(Vector3(0.0, 0.0, 14.0), Vector3.UP)
+		cam.fov = 62.0
 	_inputs = InputLanes.new()
 	_inputs.lane_pressed.connect(_on_lane_pressed)
 	_inputs.lane_released.connect(_on_lane_released)
@@ -274,14 +275,12 @@ func _resolve_object(idx: int, grade: Judge.Grade) -> void:
 	_update_hud()
 
 	var obj: Dictionary = _objects[idx]
-	if str(obj["kind"]) == "hit" and not bool(obj["is_long"]):
-		highway.hide_note(int(obj["note_index"]))
-	elif str(obj["kind"]) == "release":
-		highway.hide_note(int(obj["note_index"]))
+	var lane := int(obj["lane"])
+	var is_release := str(obj["kind"]) == "release"
+	highway.resolve_note(int(obj["note_index"]), lane, grade, is_release)
 
 	# remove from pending queue
 	if str(obj["kind"]) == "hit":
-		var lane := int(obj["lane"])
 		_pending_by_lane[lane].erase(idx)
 
 	if _all_judged() and _now_ms() >= _audio_length_ms:

@@ -1,30 +1,43 @@
 class_name NoteHighway
 extends Node3D
 
-const LANE_X: Array[float] = [-1.2, 0.0, 1.2]
+const LANE_X: Array[float] = [-2.4, 0.0, 2.4]
+const LANE_WIDTH := 1.7
+const NOTE_WIDTH := 1.55
 const JUDGE_Z := 0.0
 const SPAWN_Z := 28.0
 const BASE_APPROACH_MS := 2000.0
+const HIGHWAY_WIDTH := 7.6
 
 var scroll_speed: float = 1.0
-var _note_nodes: Dictionary = {} # note_index -> Node3D
+var _note_nodes: Dictionary = {} # note_index -> MeshInstance3D
 var _materials: Array[StandardMaterial3D] = []
+var _lane_colors: Array[Color] = [
+	Color(0.35, 0.75, 1.0),
+	Color(1.0, 0.45, 0.6),
+	Color(1.0, 0.85, 0.3),
+]
+## note_index -> { locked_z, fade, good }
+var _resolved: Dictionary = {}
+var _effects: Array = [] # { node, age, lifetime, base_scale }
 
 
 func _ready() -> void:
 	_build_highway()
 	_materials = [
-		_make_mat(Color(0.35, 0.75, 1.0)),
-		_make_mat(Color(1.0, 0.45, 0.6)),
-		_make_mat(Color(1.0, 0.85, 0.3)),
+		_make_mat(_lane_colors[0]),
+		_make_mat(_lane_colors[1]),
+		_make_mat(_lane_colors[2]),
 	]
 
 
 func setup_notes(notes: Array, timing: Timing) -> void:
 	for child in get_children():
-		if child.has_meta("note_index"):
+		if child.has_meta("note_index") or child.has_meta("hit_fx"):
 			child.queue_free()
 	_note_nodes.clear()
+	_resolved.clear()
+	_effects.clear()
 
 	for i in range(notes.size()):
 		var note: Dictionary = notes[i]
@@ -37,11 +50,11 @@ func setup_notes(notes: Array, timing: Timing) -> void:
 		if str(note["type"]) == "long":
 			node.set_meta("end_ms", timing.beat_to_ms(float(note["end"])))
 			var box := BoxMesh.new()
-			box.size = Vector3(0.9, 0.2, 1.0)
+			box.size = Vector3(NOTE_WIDTH, 0.22, 1.0)
 			node.mesh = box
 		else:
 			var box2 := BoxMesh.new()
-			box2.size = Vector3(0.9, 0.25, 0.45)
+			box2.size = Vector3(NOTE_WIDTH, 0.28, 0.5)
 			node.mesh = box2
 		node.material_override = _materials[lane]
 		add_child(node)
@@ -54,28 +67,85 @@ func update_visuals(now_ms: float) -> void:
 		var node: MeshInstance3D = _note_nodes[idx]
 		if not is_instance_valid(node):
 			continue
+		if not node.visible and _resolved.has(idx):
+			continue
+
 		var lane: int = node.get_meta("lane")
 		var start_ms: float = node.get_meta("start_ms")
 		var ntype: String = node.get_meta("type")
 		var x: float = LANE_X[lane]
 
+		if _resolved.has(idx):
+			var state: Dictionary = _resolved[idx]
+			if bool(state.get("good", false)):
+				# Keep successful notes at/above the judge line, then fade out.
+				state["fade"] = float(state.get("fade", 1.0)) - 0.045
+				var fade: float = float(state["fade"])
+				_resolved[idx] = state
+				if fade <= 0.0:
+					node.visible = false
+					continue
+				node.visible = true
+				node.position = Vector3(x, 0.18, JUDGE_Z)
+				var mat := node.material_override as StandardMaterial3D
+				if mat:
+					var c := mat.albedo_color
+					c.a = clampf(fade, 0.0, 1.0)
+					mat.albedo_color = c
+					mat.emission_energy_multiplier = 1.6 * fade
+				continue
+			# Miss: allow natural scroll below, then hide.
+			pass
+
 		if ntype == "single":
 			var z := _time_to_z(start_ms, now_ms, approach)
-			node.visible = z > JUDGE_Z - 1.0 and z < SPAWN_Z + 2.0
-			node.position = Vector3(x, 0.15, z)
+			node.visible = z > JUDGE_Z - 1.2 and z < SPAWN_Z + 2.0
+			node.position = Vector3(x, 0.18, z)
 		else:
 			var end_ms: float = node.get_meta("end_ms")
 			var z_start := _time_to_z(start_ms, now_ms, approach)
 			var z_end := _time_to_z(end_ms, now_ms, approach)
-			# bar from end (farther) to start (closer / judge)
+			# Successful long head: clamp near side to judge line while still holding.
+			if _resolved.has(idx) and bool(_resolved[idx].get("long_head_good", false)):
+				z_start = maxf(z_start, JUDGE_Z)
 			var z_far := maxf(z_start, z_end)
 			var z_near := minf(z_start, z_end)
-			var length := maxf(0.2, z_far - z_near)
+			var length := maxf(0.25, z_far - z_near)
 			var mesh := node.mesh as BoxMesh
 			if mesh:
-				mesh.size = Vector3(0.9, 0.2, length)
-			node.visible = z_far > JUDGE_Z - 1.0 and z_near < SPAWN_Z + 2.0
-			node.position = Vector3(x, 0.12, (z_far + z_near) * 0.5)
+				mesh.size = Vector3(NOTE_WIDTH, 0.22, length)
+			node.visible = z_far > JUDGE_Z - 1.2 and z_near < SPAWN_Z + 2.0
+			node.position = Vector3(x, 0.15, (z_far + z_near) * 0.5)
+
+	_update_effects()
+
+
+func resolve_note(note_index: int, lane: int, grade: Judge.Grade, is_long_release: bool = false) -> void:
+	var good := grade != Judge.Grade.MISS
+	play_judge_effect(lane, grade)
+
+	if not _note_nodes.has(note_index):
+		return
+	var node: MeshInstance3D = _note_nodes[note_index]
+	if not is_instance_valid(node):
+		return
+
+	var ntype: String = str(node.get_meta("type"))
+	if ntype == "long" and not is_long_release:
+		# Long start judged: lock head at judge line; body keeps scrolling until end.
+		if good:
+			_resolved[note_index] = {"good": false, "long_head_good": true, "fade": 1.0}
+		return
+
+	if good:
+		# Duplicate material so fade doesn't affect other notes on same lane.
+		var src := node.material_override as StandardMaterial3D
+		if src:
+			node.material_override = src.duplicate()
+		_resolved[note_index] = {"good": true, "fade": 1.0}
+		node.position = Vector3(LANE_X[lane], 0.18, JUDGE_Z)
+	else:
+		_resolved[note_index] = {"good": false, "fade": 1.0}
 
 
 func hide_note(note_index: int) -> void:
@@ -85,17 +155,125 @@ func hide_note(note_index: int) -> void:
 			node.visible = false
 
 
-func flash_lane(lane: int) -> void:
-	# optional pulse via highway lane markers
+func play_judge_effect(lane: int, grade: Judge.Grade) -> void:
+	if lane < 0 or lane > 2:
+		return
+	var color := _effect_color(grade, lane)
+	var energy := 2.2
+	var lifetime := 0.28
+	var scale0 := 1.0
+	match grade:
+		Judge.Grade.IYA:
+			energy = 4.0
+			lifetime = 0.38
+			scale0 = 1.35
+		Judge.Grade.HIHI:
+			energy = 3.0
+			lifetime = 0.32
+			scale0 = 1.15
+		Judge.Grade.ENG:
+			energy = 2.2
+			lifetime = 0.26
+			scale0 = 1.0
+		Judge.Grade.MISS:
+			energy = 1.2
+			lifetime = 0.2
+			scale0 = 0.85
+			color = Color(0.55, 0.55, 0.6)
+
+	# Horizontal flash on judge line
+	var flash := MeshInstance3D.new()
+	flash.set_meta("hit_fx", true)
+	var box := BoxMesh.new()
+	box.size = Vector3(NOTE_WIDTH * 1.15, 0.12, 0.35)
+	flash.mesh = box
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(color.r, color.g, color.b, 0.95)
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.emission_energy_multiplier = energy
+	flash.material_override = mat
+	flash.position = Vector3(LANE_X[lane], 0.25, JUDGE_Z)
+	add_child(flash)
+	_effects.append({"node": flash, "age": 0.0, "lifetime": lifetime, "base_scale": scale0, "kind": "flash"})
+
+	# Expanding ring (flat box growing on X/Z)
+	var ring := MeshInstance3D.new()
+	ring.set_meta("hit_fx", true)
+	var ring_mesh := BoxMesh.new()
+	ring_mesh.size = Vector3(0.4, 0.04, 0.4)
+	ring.mesh = ring_mesh
+	var rmat := StandardMaterial3D.new()
+	rmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	rmat.albedo_color = Color(color.r, color.g, color.b, 0.75)
+	rmat.emission_enabled = true
+	rmat.emission = color
+	rmat.emission_energy_multiplier = energy * 0.8
+	ring.material_override = rmat
+	ring.position = Vector3(LANE_X[lane], 0.2, JUDGE_Z)
+	add_child(ring)
+	_effects.append({"node": ring, "age": 0.0, "lifetime": lifetime * 1.15, "base_scale": scale0, "kind": "ring"})
+
+	# Pulse lane strip briefly
+	flash_lane(lane, energy * 0.5)
+
+
+func flash_lane(lane: int, boost: float = 2.5) -> void:
 	var marker := get_node_or_null("LaneFlash%d" % lane)
 	if marker and marker is MeshInstance3D:
 		var mat := (marker as MeshInstance3D).material_override as StandardMaterial3D
 		if mat:
-			mat.emission_energy_multiplier = 2.5
-			get_tree().create_timer(0.08).timeout.connect(func() -> void:
+			mat.emission_energy_multiplier = boost
+			get_tree().create_timer(0.1).timeout.connect(func() -> void:
 				if is_instance_valid(mat):
-					mat.emission_energy_multiplier = 0.2
+					mat.emission_energy_multiplier = 0.35
 			)
+
+
+func _update_effects() -> void:
+	var dt := get_process_delta_time()
+	var remain: Array = []
+	for fx in _effects:
+		var node: MeshInstance3D = fx["node"]
+		if not is_instance_valid(node):
+			continue
+		fx["age"] = float(fx["age"]) + dt
+		var life: float = float(fx["lifetime"])
+		var t: float = clampf(float(fx["age"]) / life, 0.0, 1.0)
+		var fade := 1.0 - t
+		var base: float = float(fx["base_scale"])
+		if str(fx["kind"]) == "ring":
+			var s := base * (0.6 + t * 2.4)
+			node.scale = Vector3(s, 1.0, s * 0.55)
+		else:
+			var s2 := base * (1.0 + t * 0.35)
+			node.scale = Vector3(s2, 1.0 + t * 0.8, 1.0)
+		var mat := node.material_override as StandardMaterial3D
+		if mat:
+			var c := mat.albedo_color
+			c.a = fade
+			mat.albedo_color = c
+			mat.emission_energy_multiplier = maxf(0.1, mat.emission_energy_multiplier * (0.92))
+		if t < 1.0:
+			remain.append(fx)
+		else:
+			node.queue_free()
+	_effects = remain
+
+
+func _effect_color(grade: Judge.Grade, lane: int) -> Color:
+	match grade:
+		Judge.Grade.IYA:
+			return Color(1.0, 0.95, 0.55).lerp(_lane_colors[lane], 0.35)
+		Judge.Grade.HIHI:
+			return Color(0.7, 0.95, 1.0).lerp(_lane_colors[lane], 0.4)
+		Judge.Grade.ENG:
+			return Color(0.85, 0.75, 1.0).lerp(_lane_colors[lane], 0.35)
+		_:
+			return Color(0.55, 0.55, 0.6)
 
 
 func _time_to_z(target_ms: float, now_ms: float, approach_ms: float) -> float:
@@ -104,10 +282,9 @@ func _time_to_z(target_ms: float, now_ms: float, approach_ms: float) -> float:
 
 
 func _build_highway() -> void:
-	# floor
 	var floor_mesh := MeshInstance3D.new()
 	var plane := BoxMesh.new()
-	plane.size = Vector3(4.2, 0.05, SPAWN_Z + 4.0)
+	plane.size = Vector3(HIGHWAY_WIDTH, 0.05, SPAWN_Z + 4.0)
 	floor_mesh.mesh = plane
 	var floor_mat := StandardMaterial3D.new()
 	floor_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -117,11 +294,10 @@ func _build_highway() -> void:
 	floor_mesh.name = "Floor"
 	add_child(floor_mesh)
 
-	# lane lines
 	for i in range(3):
 		var line := MeshInstance3D.new()
 		var lm := BoxMesh.new()
-		lm.size = Vector3(1.0, 0.02, SPAWN_Z + 2.0)
+		lm.size = Vector3(LANE_WIDTH, 0.02, SPAWN_Z + 2.0)
 		line.mesh = lm
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -134,18 +310,18 @@ func _build_highway() -> void:
 		line.name = "LaneFlash%d" % i
 		add_child(line)
 
-	# judgment line
 	var judge := MeshInstance3D.new()
 	var jm := BoxMesh.new()
-	jm.size = Vector3(4.0, 0.08, 0.12)
+	jm.size = Vector3(HIGHWAY_WIDTH - 0.4, 0.1, 0.16)
 	judge.mesh = jm
 	var jmat := StandardMaterial3D.new()
+	jmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	jmat.albedo_color = Color(0.95, 0.95, 1.0)
 	jmat.emission_enabled = true
 	jmat.emission = Color(0.8, 0.9, 1.0)
-	jmat.emission_energy_multiplier = 1.2
+	jmat.emission_energy_multiplier = 1.4
 	judge.material_override = jmat
-	judge.position = Vector3(0, 0.05, JUDGE_Z)
+	judge.position = Vector3(0, 0.06, JUDGE_Z)
 	judge.name = "JudgeLine"
 	add_child(judge)
 
@@ -153,7 +329,8 @@ func _build_highway() -> void:
 func _make_mat(color: Color) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.albedo_color = color
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(color.r, color.g, color.b, 1.0)
 	mat.emission_enabled = true
 	mat.emission = color
 	mat.emission_energy_multiplier = 1.6
