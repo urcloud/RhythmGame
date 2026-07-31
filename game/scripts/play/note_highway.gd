@@ -1,7 +1,9 @@
 class_name NoteHighway
 extends Node3D
 
-const LANE_X: Array[float] = [-2.4, 0.0, 2.4]
+# Screen-left → screen-right for position 0/1/2.
+# Camera looks toward +Z, so its local +X is world -X; world +X appears on the left.
+const LANE_X: Array[float] = [2.4, 0.0, -2.4]
 const LANE_WIDTH := 1.7
 const NOTE_WIDTH := 1.55
 const SINGLE_DEPTH := 0.5
