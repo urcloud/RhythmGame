@@ -38,16 +38,18 @@ func _ready() -> void:
 	_tat_player = AudioStreamPlayer.new()
 	_tat_player.name = "TatSfxPlayer"
 	_tat_player.stream = HitSfx.make_tat_stream()
-	_tat_player.volume_db = -10.0
-	_tat_player.max_polyphony = 8
-	_tat_player.bus = "Master"
+	# Quiet supportive tick under BGM — never competing with the track.
+	_tat_player.volume_db = -14.0
+	_tat_player.max_polyphony = 10
+	_tat_player.bus = "SFX"
 	add_child(_tat_player)
 	# Look down the highway (+Z): notes approach from far (SPAWN_Z) to judge (0).
 	var cam := $Camera3D as Camera3D
 	if cam:
-		cam.global_position = Vector3(0.0, 6.2, -8.2)
-		cam.look_at(Vector3(0.0, 0.0, 14.0), Vector3.UP)
-		cam.fov = 62.0
+		cam.global_position = Vector3(0.0, 6.4, -8.6)
+		cam.look_at(Vector3(0.0, 0.4, 14.0), Vector3.UP)
+		cam.fov = 58.0
+	_style_hud()
 	_inputs = InputLanes.new()
 	_inputs.lane_pressed.connect(_on_lane_pressed)
 	_inputs.lane_released.connect(_on_lane_released)
@@ -85,6 +87,7 @@ func _ready() -> void:
 		SceneRouter.go_song_select()
 		return
 	audio_player.stream = stream
+	audio_player.volume_db = -3.0
 	_audio_length_ms = stream.get_length() * 1000.0
 	if not audio_player.finished.is_connected(_on_audio_finished):
 		audio_player.finished.connect(_on_audio_finished)
@@ -118,7 +121,13 @@ func _process(delta: float) -> void:
 
 	if _judge_fade_t > 0.0:
 		_judge_fade_t -= delta
-		judge_label.modulate.a = clampf(_judge_fade_t / 0.4, 0.0, 1.0)
+		var a := clampf(_judge_fade_t / 0.45, 0.0, 1.0)
+		judge_label.modulate.a = a
+		# Pop scale on fresh judgments.
+		var pop := 1.0 + clampf(_judge_fade_t - 0.45, 0.0, 0.25) * 1.2
+		judge_label.scale = Vector2(pop, pop)
+	else:
+		judge_label.scale = Vector2.ONE
 
 	var end_grace := float(AppConfig.judge_eng_ms) + 200.0
 	if now >= _audio_length_ms + end_grace or (_audio_ended and _post_audio_ms >= end_grace):
@@ -178,8 +187,23 @@ func _on_lane_pressed(lane: int) -> void:
 func _play_tat() -> void:
 	if _tat_player == null or _tat_player.stream == null:
 		return
-	_tat_player.pitch_scale = randf_range(0.96, 1.06)
+	_tat_player.pitch_scale = randf_range(0.98, 1.03)
 	_tat_player.play()
+
+
+func _style_hud() -> void:
+	title_label.add_theme_color_override("font_color", Color(0.75, 0.88, 1.0, 0.9))
+	score_label.add_theme_color_override("font_color", Color(0.95, 0.98, 1.0))
+	score_label.add_theme_color_override("font_outline_color", Color(0.1, 0.35, 0.7, 0.85))
+	score_label.add_theme_constant_override("outline_size", 6)
+	combo_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.55))
+	combo_label.add_theme_color_override("font_outline_color", Color(0.9, 0.25, 0.55, 0.9))
+	combo_label.add_theme_constant_override("outline_size", 10)
+	combo_label.add_theme_font_size_override("font_size", 56)
+	judge_label.add_theme_constant_override("outline_size", 12)
+	judge_label.add_theme_font_size_override("font_size", 52)
+	judge_label.pivot_offset = Vector2(120, 40)
+	combo_label.pivot_offset = Vector2(80, 30)
 
 
 func _on_lane_released(lane: int) -> void:
@@ -367,8 +391,11 @@ func _resolve_object(idx: int, grade: Judge.Grade) -> void:
 		_max_combo = maxi(_max_combo, _combo)
 
 	judge_label.text = label
-	_judge_fade_t = 0.6
+	_judge_fade_t = 0.7
+	var jc := _judge_color(grade)
+	judge_label.modulate = jc
 	judge_label.modulate.a = 1.0
+	judge_label.add_theme_color_override("font_outline_color", jc.darkened(0.55))
 	_update_hud()
 
 	var obj: Dictionary = _objects[idx]
@@ -393,7 +420,27 @@ func _all_judged() -> bool:
 
 func _update_hud() -> void:
 	score_label.text = "%07d" % _score
-	combo_label.text = str(_combo) if _combo > 0 else ""
+	if _combo > 0:
+		combo_label.text = "%d COMBO" % _combo
+		var hot := clampf(float(_combo) / 50.0, 0.0, 1.0)
+		combo_label.add_theme_color_override(
+			"font_color",
+			Color(1.0, 0.95, 0.55).lerp(Color(1.0, 0.45, 0.75), hot)
+		)
+	else:
+		combo_label.text = ""
+
+
+func _judge_color(grade: Judge.Grade) -> Color:
+	match grade:
+		Judge.Grade.IYA:
+			return Color(1.0, 0.92, 0.35)
+		Judge.Grade.HIHI:
+			return Color(0.45, 0.95, 1.0)
+		Judge.Grade.ENG:
+			return Color(0.85, 0.7, 1.0)
+		_:
+			return Color(0.75, 0.75, 0.82)
 
 
 func _finish_song() -> void:
