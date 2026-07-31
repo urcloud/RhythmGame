@@ -1,0 +1,129 @@
+[gd_scene load_steps=3 format=3 uid="uid://gameplay001"]
+
+[ext_resource type="Script" path="res://scripts/play/gameplay_controller.gd" id="1_gp"]
+[ext_resource type="Script" path="res://scripts/play/note_highway.gd" id="2_hw"]
+
+[node name="Gameplay" type="Node3D"]
+script = ExtResource("1_gp")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.8870109, 0.4617486, 0, -0.4617486, 0.8870109, 0, 4.2, -6.5)
+fov = 55.0
+current = true
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 8, 0)
+shadow_enabled = true
+
+[node name="Highway" type="Node3D" parent="."]
+script = ExtResource("2_hw")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+volume_db = -3.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="TitleLabel" type="Label" parent="HUD"]
+offset_left = 24.0
+offset_top = 16.0
+offset_right = 800.0
+offset_bottom = 48.0
+theme_override_font_sizes/font_size = 18
+text = "Title"
+
+[node name="ScoreLabel" type="Label" parent="HUD"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -280.0
+offset_top = 16.0
+offset_right = -24.0
+offset_bottom = 64.0
+grow_horizontal = 0
+theme_override_font_sizes/font_size = 32
+horizontal_alignment = 2
+text = "0000000"
+
+[node name="ComboLabel" type="Label" parent="HUD"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -80.0
+offset_top = 80.0
+offset_right = 80.0
+offset_bottom = 140.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 40
+horizontal_alignment = 1
+text = ""
+
+[node name="JudgeLabel" type="Label" parent="HUD"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -40.0
+offset_right = 120.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 42
+horizontal_alignment = 1
+vertical_alignment = 1
+text = ""
+
+[node name="HintLabel" type="Label" parent="HUD"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -40.0
+offset_right = 400.0
+offset_bottom = -12.0
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.65, 0.7, 0.78, 1)
+text = "Esc: 일시정지"
+
+[node name="PauseOverlay" type="ColorRect" parent="HUD"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="PausePanel" type="VBoxContainer" parent="HUD/PauseOverlay"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -80.0
+offset_right = 120.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="PauseTitle" type="Label" parent="HUD/PauseOverlay/PausePanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+text = "일시정지"
+
+[node name="ResumeButton" type="Button" parent="HUD/PauseOverlay/PausePanel"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "계속하기"
+
+[node name="QuitButton" type="Button" parent="HUD/PauseOverlay/PausePanel"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "선곡으로"
+
+[connection signal="pressed" from="HUD/PauseOverlay/PausePanel/ResumeButton" to="." method="_on_resume_pressed"]
+[connection signal="pressed" from="HUD/PauseOverlay/PausePanel/QuitButton" to="." method="_on_quit_pressed"]

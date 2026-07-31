@@ -1,0 +1,13 @@
+{
+  "chart_dir": "../format/examples",
+  "scroll_speed": 1.0,
+  "judge_iya_ms": 45,
+  "judge_hihi_ms": 90,
+  "judge_eng_ms": 150,
+  "lane0_keys": ["Q", "W", "E", "R", "A", "S", "D", "F", "Z", "X", "C", "V"],
+  "lane1_keys": ["T", "Y", "U", "I", "G", "H", "J", "B", "N"],
+  "lane2_keys": ["O", "P", "[", "]", "K", "L", ";", "'", "M", ",", ".", "/"],
+  "window_width": 1280,
+  "window_height": 720,
+  "fullscreen": false
+}

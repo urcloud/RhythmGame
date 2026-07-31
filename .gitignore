@@ -1,0 +1,16 @@
+# Godot editor / import cache
+game/.godot/
+game/.import/
+
+# Export / build outputs
+game/build/
+game/export/
+game/dist/
+
+# Local Godot binary (optional tools/)
+tools/
+*.translation
+
+# OS junk
+.DS_Store
+Thumbs.db
